@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Enhancer — Studio</title>
+  <meta name="description" content="Turn a rough one-line instruction into a well-structured prompt." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314161a'/%3E%3Cpath d='M4 20 L9 10 L14 22 L19 6' stroke='%23ff5d5d' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M19 16 C21 9 24 23 27 16' stroke='%233ddc84' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+</head>
+<body class="textured">
+  <div class="app-shell" id="appContent">
+    <header class="topbar">
+      <a class="wordmark" href="#enhancer" data-nav-target="enhancer">
+        <svg class="wordmark__icon" viewBox="0 0 46 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path class="rough-path" d="M1 20 L5 8 L9 22 L13 4 L17 18 L20 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="chain-arrow" d="M21 14 H26" stroke-width="2" stroke-linecap="round"/>
+          <path class="chain-arrow" d="M23.5 11 L26.5 14 L23.5 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path class="smooth-path" d="M29 14 C31 6, 34 22, 37 14 C39 8, 42 20, 45 14" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="wordmark__text">Prompt Enhancer<small>Signal Chain Studio</small></span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="navMenu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="top-nav" id="navMenu" aria-label="Primary navigation">
+        <a class="top-nav__link is-active" href="#enhancer" data-nav-target="enhancer">Enhancer</a>
+        <a class="top-nav__link" href="#templates" data-nav-target="templates">Templates</a>
+        <a class="top-nav__link" href="#saved-prompts" data-nav-target="saved-prompts">Saved Prompts</a>
+        <a class="top-nav__link" href="#features" data-nav-target="features">Features</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle color theme" aria-pressed="false" title="Toggle theme">
+          <span class="theme-toggle__icon" aria-hidden="true">☀</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <div class="page-view is-active" data-page="enhancer">
+        <div class="signal-rail" id="signalRail" aria-hidden="true">
+          <div class="signal-rail__stage is-active" data-stage="input">
+            <span class="signal-rail__led"></span> Input
+          </div>
+          <div class="signal-rail__wire"></div>
+          <div class="signal-rail__stage" data-stage="shape">
+            <span class="signal-rail__led"></span> Shape
+          </div>
+          <div class="signal-rail__wire"></div>
+          <div class="signal-rail__stage" data-stage="output">
+            <span class="signal-rail__led"></span> Output
+          </div>
+        </div>
+
+        <div class="tool-grid">
+          <section class="panel" aria-labelledby="inputHeading">
+            <div class="panel-head">
+              <h2 id="inputHeading">Raw Input</h2>
+              <span class="char-count" id="inputCharCount">0 chars</span>
+            </div>
+            <div class="panel-body">
+              <label class="visually-hidden" for="rawInput">Rough prompt</label>
+              <textarea class="prompt-textarea" id="rawInput" placeholder="e.g. write me a function that sorts a list"></textarea>
+
+              <div class="utility-strip">
+                <div class="field-group">
+                  <label class="field-label" for="styleSelect">Prompt Style</label>
+                  <select class="field-select" id="styleSelect">
+                    <option value="concise">Concise</option>
+                    <option value="balanced" selected>Balanced</option>
+                    <option value="detailed">Detailed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="panel-actions">
+                <button class="btn btn-primary" id="enhanceBtn" type="button">
+                  <span class="vu-meter" id="enhanceVu" aria-hidden="true"><span class="vu-meter__bar"></span><span class="vu-meter__bar"></span><span class="vu-meter__bar"></span></span>
+                  Enhance
+                </button>
+                <button class="btn btn-ghost" id="clearBtn" type="button">Clear</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="outputHeading">
+            <div class="panel-head">
+              <h2 id="outputHeading">Enhanced Output</h2>
+              <span class="char-count" id="outputCharCount">0 chars</span>
+            </div>
+            <div class="panel-body">
+              <div class="output-readout" id="outputReadout" role="status" aria-live="polite"></div>
+              <div class="panel-actions">
+                <button class="btn btn-secondary" id="copyBtn" type="button">Copy to Clipboard</button>
+                <button class="btn btn-secondary" id="downloadBtn" type="button">Download Output</button>
+                <button class="btn btn-ghost" id="savePromptBtn" type="button">Save Prompt</button>
+              </div>
+
+              <div class="ai-launch-section" id="aiLaunchSection">
+                <div class="ai-launch-head">
+                  <span class="ai-launch-title">Redirect to AI Tools</span>
+                  <span class="ai-launch-hint">One-click copy & launch</span>
+                </div>
+                <div class="ai-launch-grid" id="aiLaunchGrid">
+                  <button class="ai-tool-btn" data-ai="chatgpt" type="button" title="Open prompt in ChatGPT">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 10.2a5.4 5.4 0 0 0-.5-4.5 5.5 5.5 0 0 0-4.8-2.7 5.4 5.4 0 0 0-4.2-1.9 5.5 5.5 0 0 0-5.3 3.8 5.4 5.4 0 0 0-3.8 2.5 5.5 5.5 0 0 0 .6 5.8 5.4 5.4 0 0 0 .5 4.5 5.5 5.5 0 0 0 4.8 2.7 5.4 5.4 0 0 0 4.2 1.9 5.5 5.5 0 0 0 5.3-3.8 5.4 5.4 0 0 0 3.8-2.5 5.5 5.5 0 0 0-.6-5.8zm-8.5 11.2a3.9 3.9 0 0 1-2.6-.9l.1-.1 4.3-2.5a.8.8 0 0 0 .4-.7v-4.9l1.5.9a.1.1 0 0 1 .1.1v5a3.9 3.9 0 0 1-3.8 3.1zm-7.6-3.8a3.9 3.9 0 0 1-.5-2.7l.1.1 4.3 2.5a.8.8 0 0 0 .8 0l4.3-2.5v1.7a.1.1 0 0 1 0 .1l-4.3 2.5a3.9 3.9 0 0 1-4.7-1.7zm-1.4-8.5a3.9 3.9 0 0 1 2.1-1.8v5a.8.8 0 0 0 .4.7l4.3 2.5-1.5.9a.1.1 0 0 1-.1 0l-4.3-2.5a3.9 3.9 0 0 1-.9-4.8zm14.3-1.6l-4.3 2.5v-1.7a.1.1 0 0 1 0-.1l4.3-2.5a3.9 3.9 0 0 1 5.2 4.4l-.1-.1-4.3-2.5a.8.8 0 0 0-.8 0zm2.2 6.8l-4.3-2.5 1.5-.9a.1.1 0 0 1 .1 0l4.3 2.5a3.9 3.9 0 0 1-1.2 7.5v-5a.8.8 0 0 0-.4-.7zm-7.5-3.3l-1.9-1.1 1.9-1.1 1.9 1.1v2.2z"/></svg>
+                    <span>ChatGPT</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="claude" type="button" title="Open prompt in Claude">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span>Claude</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="gemini" type="button" title="Open prompt in Google Gemini">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 24C12 17.37 6.63 12 0 12C6.63 12 12 6.63 12 0C12 6.63 17.37 12 24 12C17.37 12 12 17.37 12 24Z"/></svg>
+                    <span>Gemini</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="perplexity" type="button" title="Open prompt in Perplexity">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 6v12l8 4 8-4V6l-8-4zm6 14.5l-6 3-6-3V7.5l6-3 6 3v9zm-6-8.5l-4 2v4l4 2 4-2v-4l-4-2z"/></svg>
+                    <span>Perplexity</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="deepseek" type="button" title="Open prompt in DeepSeek">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5h-2v-2h2zm0-4h-2V7h2z"/></svg>
+                    <span>DeepSeek</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="midjourney" type="button" title="Open prompt in Midjourney">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13H5.5L12 6.5z"/></svg>
+                    <span>Midjourney</span>
+                  </button>
+                  <button class="ai-tool-btn" data-ai="copilot" type="button" title="Open prompt in Copilot">
+                    <svg class="ai-tool-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12a9.9 9.9 0 0 0 4.5 8.3c.5.3 1.1-.1 1.1-.7v-1.6c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.7-1.4-2.2-.3-4.5-1.1-4.5-5a3.9 3.9 0 0 1 1-2.7c-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c2-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.5 5 .4.3.7.9.7 1.9v2.8c0 .6.6 1 1.1.7A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"/></svg>
+                    <span>Copilot</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="page-view" data-page="templates">
+        <section class="panel info-panel" aria-labelledby="templatesHeading">
+          <div class="panel-head">
+            <h2 id="templatesHeading">Template Library</h2>
+          </div>
+          <div class="panel-body">
+            <p class="info-panel__lead">Pick a starting style and apply it directly to the enhancer canvas.</p>
+            <div class="template-grid">
+              <article class="template-card">
+                <h3>Code</h3>
+                <p>Build robust implementation prompts with structure, constraints, and clear expectations.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="code" data-switch-page="enhancer">Apply Code Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Writing</h3>
+                <p>Create polished prose prompts with tone, audience, and flow considerations.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="writing" data-switch-page="enhancer">Apply Writing Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Marketing</h3>
+                <p>Shape persuasive campaigns with a clear offer, audience, and call to action.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="marketing" data-switch-page="enhancer">Apply Marketing Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Business</h3>
+                <p>Frame strategy and planning prompts around outcomes, risks, and decisions.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="business" data-switch-page="enhancer">Apply Business Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Technical Docs</h3>
+                <p>Create detailed, developer-friendly documentation prompts with architecture, examples, and clarity.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="technical" data-switch-page="enhancer">Apply Technical Docs Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Social Media</h3>
+                <p>Craft engaging social captions and campaign prompts suited for product launches or community growth.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="social" data-switch-page="enhancer">Apply Social Media Template</button>
+              </article>
+              <article class="template-card">
+                <h3>Image FX</h3>
+                <p>Generate cinematic, trend-driven image prompts with dramatic lighting, depth, and special effects.</p>
+                <button class="btn btn-secondary template-card__action" type="button" data-template="imagefx" data-switch-page="enhancer">Apply Image FX Template</button>
+              </article>
+              <article class="template-card template-card--soon">
+                <h3>Coming Soon</h3>
+                <p>More categories such as video prompts, research briefs, and product launch kits will be added soon.</p>
+                <button class="btn btn-ghost template-card__action" type="button" disabled>Planned for Future</button>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="page-view" data-page="saved-prompts">
+        <section class="panel saved-panel" aria-labelledby="savedHeading">
+          <div class="panel-head">
+            <h2 id="savedHeading">Saved Prompts</h2>
+            <span class="char-count" id="savedCount">0 saved</span>
+          </div>
+          <div class="panel-body">
+            <div class="saved-toolbar">
+              <button class="btn btn-primary" id="saveCurrentPromptBtn" type="button">Save Current</button>
+              <button class="btn btn-ghost" id="clearSavedBtn" type="button">Clear Saved</button>
+            </div>
+            <ul class="saved-list" id="savedList"></ul>
+          </div>
+        </section>
+      </div>
+
+      <div class="page-view" data-page="features">
+        <section class="panel info-panel info-panel--how" aria-labelledby="featuresHeading">
+          <div class="panel-head">
+            <h2 id="featuresHeading">Features</h2>
+          </div>
+          <div class="panel-body">
+            <div class="steps">
+              <article class="step-card">
+                <span class="step-card__number">01</span>
+                <h3>Smart Enhancing</h3>
+                <p>Turn rough prompts into polished, structured instructions instantly.</p>
+              </article>
+              <article class="step-card">
+                <span class="step-card__number">02</span>
+                <h3>Reusable Templates</h3>
+                <p>Jump-start your workflow with code, writing, marketing, and business prompts.</p>
+              </article>
+              <article class="step-card">
+                <span class="step-card__number">03</span>
+                <h3>Save & Reuse</h3>
+                <p>Keep your best prompts handy and revisit them whenever you need them.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="ai-toast" id="aiToast" role="status" aria-live="polite" hidden>
+    <span class="ai-toast__icon">✓</span>
+    <span class="ai-toast__message" id="aiToastMsg">Copied & Launching AI...</span>
+  </div>
+
+  <script type="module" src="js/enhancer.js"></script>
+</body>
+</html>
