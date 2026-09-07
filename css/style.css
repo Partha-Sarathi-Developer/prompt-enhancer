@@ -1334,7 +1334,8 @@ body.light-theme .topbar {
   text-transform: uppercase;
 }
 
-.field-select {
+.field-select,
+.field-input {
   width: 100%;
   border: 1px solid var(--panel-border);
   background: var(--bg-alt);
@@ -1342,6 +1343,18 @@ body.light-theme .topbar {
   border-radius: var(--radius-sm);
   padding: 0.7rem 0.8rem;
   font-family: var(--font-body);
+}
+
+.field-input::placeholder {
+  color: var(--text-faint);
+}
+
+.info-note {
+  margin: 0.75rem 0 0;
+  color: var(--text-faint);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  font-family: var(--font-mono);
 }
 
 .template-pills {

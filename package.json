@@ -1,0 +1,17 @@
+{
+  "name": "prompt-enhancer",
+  "version": "1.0.0",
+  "description": "> Turn rough, single-line instructions into structured, production-ready prompts and launch them into your favorite AI tools with one click.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}

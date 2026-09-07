@@ -10,11 +10,14 @@ const DEFAULT_OPTIONS = {
 };
 
 const DEFAULT_API_KEY = "";
-const DEFAULT_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
+const DEFAULT_ENDPOINT = "/api/enhance";
 const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 const SAVED_PROMPTS_KEY = "promptEnhancer.savedPrompts";
 const MAX_SAVED_PROMPTS = 8;
 const THEME_KEY = "promptEnhancer.theme";
+const API_KEY_STORAGE_KEY = "promptEnhancer.apiKey";
+const API_ENDPOINT_STORAGE_KEY = "promptEnhancer.apiEndpoint";
+const API_MODEL_STORAGE_KEY = "promptEnhancer.apiModel";
 
 const ui = {
   rawInput: document.getElementById("rawInput"),
@@ -32,6 +35,9 @@ const ui = {
   savedList: document.getElementById("savedList"),
   savedCount: document.getElementById("savedCount"),
   styleSelect: document.getElementById("styleSelect"),
+  apiKeyInput: document.getElementById("apiKeyInput"),
+  apiEndpointInput: document.getElementById("apiEndpointInput"),
+  apiModelInput: document.getElementById("apiModelInput"),
   templatePills: Array.from(document.querySelectorAll("[data-template]")),
   navToggle: document.getElementById("navToggle"),
   navMenu: document.getElementById("navMenu"),
@@ -239,6 +245,51 @@ function resolveOptions() {
   };
 }
 
+function readStoredApiConfig() {
+  try {
+    return {
+      apiKey: localStorage.getItem(API_KEY_STORAGE_KEY) ?? DEFAULT_API_KEY,
+      endpoint: localStorage.getItem(API_ENDPOINT_STORAGE_KEY) ?? DEFAULT_ENDPOINT,
+      model: localStorage.getItem(API_MODEL_STORAGE_KEY) ?? DEFAULT_MODEL,
+    };
+  } catch {
+    return {
+      apiKey: DEFAULT_API_KEY,
+      endpoint: DEFAULT_ENDPOINT,
+      model: DEFAULT_MODEL,
+    };
+  }
+}
+
+function syncApiConfigInputs() {
+  const config = readStoredApiConfig();
+  if (ui.apiKeyInput) ui.apiKeyInput.value = config.apiKey || "";
+  if (ui.apiEndpointInput) ui.apiEndpointInput.value = config.endpoint || DEFAULT_ENDPOINT;
+  if (ui.apiModelInput) ui.apiModelInput.value = config.model || DEFAULT_MODEL;
+}
+
+function saveApiConfig() {
+  const apiKey = (ui.apiKeyInput?.value || "").trim();
+  const endpoint = (ui.apiEndpointInput?.value || DEFAULT_ENDPOINT).trim();
+  const model = (ui.apiModelInput?.value || DEFAULT_MODEL).trim();
+
+  try {
+    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+    localStorage.setItem(API_ENDPOINT_STORAGE_KEY, endpoint);
+    localStorage.setItem(API_MODEL_STORAGE_KEY, model);
+  } catch {
+    // Ignore localStorage write failures in restricted/private browser modes.
+  }
+}
+
+function getServerConfig() {
+  const config = readStoredApiConfig();
+  return {
+    endpoint: config.endpoint || DEFAULT_ENDPOINT,
+    model: config.model || DEFAULT_MODEL,
+  };
+}
+
 const TEMPLATE_LIBRARY = {
   code: "Write a clean, production-ready code solution with clear structure, edge cases, and a short explanation.",
   writing: "Create a polished piece of writing with a strong opening, clear tone, and concise supporting details.",
@@ -260,43 +311,26 @@ function applyTemplate(templateKey) {
 }
 
 async function callAiEnhancer(raw, options) {
-  const response = await fetch(DEFAULT_ENDPOINT, {
+  const config = getServerConfig();
+  const response = await fetch(config.endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${DEFAULT_API_KEY}`,
     },
     body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "system",
-          content: [
-            "You are a prompt engineering assistant.",
-            "Rewrite the user’s raw request into a polished, well-structured prompt.",
-            "Preserve the intent, improve clarity, and follow the requested enhancement settings.",
-            "Return only the enhanced prompt text.",
-          ].join(" "),
-        },
-        {
-          role: "user",
-          content: [
-            `Raw request: ${raw}`,
-            `Options: role=${options.role}, task=${options.task}, format=${options.format}, constraints=${options.constraints}, examples=${options.examples}, reasoning=${options.reasoning}`,
-          ].join("\n\n"),
-        },
-      ],
+      raw,
+      options,
+      model: config.model,
     }),
   });
 
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`AI request failed: ${response.status} ${errorBody}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `AI request failed: ${response.status}`);
   }
 
   const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content?.trim();
+  const content = data?.output?.trim();
 
   if (!content) {
     throw new Error("AI returned an empty response.");
@@ -327,7 +361,12 @@ async function runEnhance() {
     updateCharCounts();
   } catch (error) {
     console.error(error);
-    const fallbackOutput = buildEnhancedPrompt(raw, resolveOptions());
+    const reason = error?.message || "Unable to reach the AI service.";
+    const fallbackOutput = [
+      `> API note: ${reason}`,
+      "",
+      buildEnhancedPrompt(raw, resolveOptions()),
+    ].join("\n");
     ui.outputReadout.textContent = fallbackOutput;
     updateCharCounts();
   } finally {
@@ -516,6 +555,11 @@ function wireEvents() {
     if (!ui.styleSelect.value) return;
   });
 
+  [ui.apiKeyInput, ui.apiEndpointInput, ui.apiModelInput].forEach((input) => {
+    input?.addEventListener("input", saveApiConfig);
+    input?.addEventListener("change", saveApiConfig);
+  });
+
   ui.templatePills.forEach((pill) => {
     pill.addEventListener("click", () => {
       applyTemplate(pill.dataset.template);
@@ -580,6 +624,7 @@ function wireEvents() {
 function initialize() {
   wireEvents();
   wireNavigation();
+  syncApiConfigInputs();
   updateCharCounts();
   renderSavedPrompts(loadSavedPrompts());
   const savedTheme = localStorage.getItem(THEME_KEY);
