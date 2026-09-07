@@ -46,15 +46,6 @@
           <div class="panel-body">
             <label class="visually-hidden" for="rawInput">Rough prompt</label>
             <textarea class="prompt-textarea" id="rawInput" placeholder="e.g. write me a function that sorts a list"></textarea>
-            <div class="utility-strip">
-              <div class="field-group">
-                <label class="field-label" for="apiKeyInput">Private API Key</label>
-                <input class="field-input" id="apiKeyInput" type="password" placeholder="Stored only on the server (.env)" autocomplete="off" />
-              </div>
-            </div>
-
-            <p class="info-note">The Groq key stays private on the backend. The browser never sends the secret key directly.</p>
-
             <div class="panel-actions">
               <button class="btn btn-primary" id="enhanceBtn" type="button">
                 <span class="vu-meter" id="enhanceVu" aria-hidden="true"><span class="vu-meter__bar"></span><span class="vu-meter__bar"></span><span class="vu-meter__bar"></span></span>
