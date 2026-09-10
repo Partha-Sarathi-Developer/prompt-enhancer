@@ -35,7 +35,6 @@ const ui = {
   savedList: document.getElementById("savedList"),
   savedCount: document.getElementById("savedCount"),
   styleSelect: document.getElementById("styleSelect"),
-  formatSelect: document.getElementById("formatSelect"),
   apiKeyInput: document.getElementById("apiKeyInput"),
   apiEndpointInput: document.getElementById("apiEndpointInput"),
   apiModelInput: document.getElementById("apiModelInput"),
@@ -109,8 +108,7 @@ function detectRole(rawLower) {
 function buildEnhancedPrompt(raw, options) {
   const trimmed = raw.trim().replace(/\s+/g, " ");
   const rawLower = trimmed.toLowerCase();
-  const isPlain = options.outputFormat === "plain";
-  const heading = (title) => (isPlain ? `${title}:` : `## ${title}`);
+  const heading = (title) => `${title}:`;
   const sections = [];
 
   if (options.role) {
@@ -126,20 +124,13 @@ function buildEnhancedPrompt(raw, options) {
   sections.push(`${heading("Context")}\nTreat the request as the main source of truth. When a detail is missing, only make a sensible assumption if it is safe to do so; otherwise ask a focused clarification question.`);
 
   if (options.format) {
-    const formatRules = isPlain
-      ? [
-          "- Use plain text only: no Markdown symbols such as #, *, _, or backticks.",
-          "- Start with the most useful result first.",
-          "- Label each section with a plain word followed by a colon, separated by blank lines.",
-          "- Use numbered steps or dashes for lists.",
-          "- Avoid filler, repetition, and unnecessary preamble.",
-        ]
-      : [
-          "- Use clear Markdown structure.",
-          "- Start with the most useful result first.",
-          "- Use headings, numbered steps, bullet points, or tables where readability improves.",
-          "- Avoid filler, repetition, and unnecessary preamble.",
-        ];
+    const formatRules = [
+      "- Use plain text only: no Markdown symbols such as #, *, _, or backticks.",
+      "- Start with the most useful result first.",
+      "- Label each section with a plain word followed by a colon, separated by blank lines.",
+      "- Use numbered steps or dashes for lists.",
+      "- Avoid filler, repetition, and unnecessary preamble.",
+    ];
     sections.push(`${heading("Output Format")}\n${formatRules.join("\n")}`);
   }
 
@@ -259,7 +250,6 @@ function resolveOptions() {
   return {
     ...DEFAULT_OPTIONS,
     style: ui.styleSelect?.value ?? "balanced",
-    outputFormat: ui.formatSelect?.value ?? "markdown",
   };
 }
 
