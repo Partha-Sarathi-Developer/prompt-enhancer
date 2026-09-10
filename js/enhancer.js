@@ -150,36 +150,58 @@ function buildEnhancedPrompt(raw, options) {
   return sections.join("\n\n");
 }
 
+// Browsers and origin servers start dropping requests past roughly 2 KB of URL,
+// so a long prompt is handed over via the clipboard instead of a query string.
+const MAX_LAUNCH_URL_LENGTH = 1800;
+
 const AI_PLATFORMS = {
   chatgpt: {
     name: "ChatGPT",
-    getUrl: (prompt) => (prompt ? `https://chatgpt.com/?q=${encodeURIComponent(prompt)}` : "https://chatgpt.com/"),
+    home: "https://chatgpt.com/",
+    getUrl: (prompt) => `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`,
   },
   claude: {
     name: "Claude",
-    getUrl: () => "https://claude.ai/new",
+    home: "https://claude.ai/new",
+    getUrl: (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`,
   },
   gemini: {
     name: "Google Gemini",
-    getUrl: () => "https://gemini.google.com/app",
+    home: "https://gemini.google.com/app",
   },
   perplexity: {
     name: "Perplexity",
-    getUrl: (prompt) => (prompt ? `https://www.perplexity.ai/search?q=${encodeURIComponent(prompt)}` : "https://www.perplexity.ai/"),
+    home: "https://www.perplexity.ai/",
+    getUrl: (prompt) => `https://www.perplexity.ai/search?q=${encodeURIComponent(prompt)}`,
   },
   deepseek: {
     name: "DeepSeek",
-    getUrl: () => "https://chat.deepseek.com/",
+    home: "https://chat.deepseek.com/",
   },
   midjourney: {
     name: "Midjourney",
-    getUrl: () => "https://www.midjourney.com/",
+    home: "https://www.midjourney.com/imagine",
+    getUrl: (prompt) => `https://www.midjourney.com/imagine?prompt=${encodeURIComponent(prompt)}`,
   },
   copilot: {
     name: "Copilot",
-    getUrl: () => "https://copilot.microsoft.com/",
+    home: "https://copilot.microsoft.com/",
+    getUrl: (prompt) => `https://copilot.microsoft.com/?q=${encodeURIComponent(prompt)}`,
   },
 };
+
+function resolveLaunchTarget(platform, prompt) {
+  if (!platform.getUrl) {
+    return { url: platform.home, isPrefilled: false };
+  }
+
+  const url = platform.getUrl(prompt);
+  if (url.length > MAX_LAUNCH_URL_LENGTH) {
+    return { url: platform.home, isPrefilled: false };
+  }
+
+  return { url, isPrefilled: true };
+}
 
 let toastTimer = null;
 function showAiToast(message) {
@@ -216,15 +238,24 @@ async function handleAiRedirect(platformKey) {
     return;
   }
 
+  let isCopied = true;
   try {
     await navigator.clipboard.writeText(promptText);
   } catch (err) {
+    isCopied = false;
     console.error("Clipboard copy failed:", err);
   }
 
-  const targetUrl = platform.getUrl(promptText);
-  window.open(targetUrl, "_blank", "noopener,noreferrer");
-  showAiToast(`Prompt copied! Launching ${platform.name}...`);
+  const { url, isPrefilled } = resolveLaunchTarget(platform, promptText);
+  window.open(url, "_blank", "noopener,noreferrer");
+
+  if (isPrefilled) {
+    showAiToast(`Launching ${platform.name} with your prompt...`);
+  } else if (isCopied) {
+    showAiToast(`Prompt copied — paste it into ${platform.name}.`);
+  } else {
+    showAiToast(`Opening ${platform.name} — copy the prompt manually.`);
+  }
 }
 
 function updateCharCounts() {
