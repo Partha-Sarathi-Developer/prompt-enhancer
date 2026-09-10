@@ -9,15 +9,10 @@ const DEFAULT_OPTIONS = {
   reasoning: false,
 };
 
-const DEFAULT_API_KEY = "";
 const DEFAULT_ENDPOINT = "/api/enhance";
-const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 const SAVED_PROMPTS_KEY = "promptEnhancer.savedPrompts";
 const MAX_SAVED_PROMPTS = 8;
 const THEME_KEY = "promptEnhancer.theme";
-const API_KEY_STORAGE_KEY = "promptEnhancer.apiKey";
-const API_ENDPOINT_STORAGE_KEY = "promptEnhancer.apiEndpoint";
-const API_MODEL_STORAGE_KEY = "promptEnhancer.apiModel";
 
 const ui = {
   rawInput: document.getElementById("rawInput"),
@@ -35,13 +30,10 @@ const ui = {
   savedList: document.getElementById("savedList"),
   savedCount: document.getElementById("savedCount"),
   styleSelect: document.getElementById("styleSelect"),
-  apiKeyInput: document.getElementById("apiKeyInput"),
-  apiEndpointInput: document.getElementById("apiEndpointInput"),
-  apiModelInput: document.getElementById("apiModelInput"),
   templatePills: Array.from(document.querySelectorAll("[data-template]")),
   navToggle: document.getElementById("navToggle"),
-  navMenu: document.getElementById("navMenu"),
   navLinks: Array.from(document.querySelectorAll(".top-nav__link")),
+  wordmark: document.querySelector(".wordmark[data-nav-target]"),
   topbar: document.querySelector(".topbar"),
   themeToggle: document.getElementById("themeToggle"),
   pageViews: Array.from(document.querySelectorAll(".page-view")),
@@ -284,51 +276,6 @@ function resolveOptions() {
   };
 }
 
-function readStoredApiConfig() {
-  try {
-    return {
-      apiKey: localStorage.getItem(API_KEY_STORAGE_KEY) ?? DEFAULT_API_KEY,
-      endpoint: localStorage.getItem(API_ENDPOINT_STORAGE_KEY) ?? DEFAULT_ENDPOINT,
-      model: localStorage.getItem(API_MODEL_STORAGE_KEY) ?? DEFAULT_MODEL,
-    };
-  } catch {
-    return {
-      apiKey: DEFAULT_API_KEY,
-      endpoint: DEFAULT_ENDPOINT,
-      model: DEFAULT_MODEL,
-    };
-  }
-}
-
-function syncApiConfigInputs() {
-  const config = readStoredApiConfig();
-  if (ui.apiKeyInput) ui.apiKeyInput.value = config.apiKey || "";
-  if (ui.apiEndpointInput) ui.apiEndpointInput.value = config.endpoint || DEFAULT_ENDPOINT;
-  if (ui.apiModelInput) ui.apiModelInput.value = config.model || DEFAULT_MODEL;
-}
-
-function saveApiConfig() {
-  const apiKey = (ui.apiKeyInput?.value || "").trim();
-  const endpoint = (ui.apiEndpointInput?.value || DEFAULT_ENDPOINT).trim();
-  const model = (ui.apiModelInput?.value || DEFAULT_MODEL).trim();
-
-  try {
-    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-    localStorage.setItem(API_ENDPOINT_STORAGE_KEY, endpoint);
-    localStorage.setItem(API_MODEL_STORAGE_KEY, model);
-  } catch {
-    // Ignore localStorage write failures in restricted/private browser modes.
-  }
-}
-
-function getServerConfig() {
-  const config = readStoredApiConfig();
-  return {
-    endpoint: config.endpoint || DEFAULT_ENDPOINT,
-    model: config.model || DEFAULT_MODEL,
-  };
-}
-
 const TEMPLATE_LIBRARY = {
   code: "Write a clean, production-ready code solution with clear structure, edge cases, and a short explanation.",
   writing: "Create a polished piece of writing with a strong opening, clear tone, and concise supporting details.",
@@ -350,17 +297,12 @@ function applyTemplate(templateKey) {
 }
 
 async function callAiEnhancer(raw, options) {
-  const config = getServerConfig();
-  const response = await fetch(config.endpoint, {
+  const response = await fetch(DEFAULT_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      raw,
-      options,
-      model: config.model,
-    }),
+    body: JSON.stringify({ raw, options }),
   });
 
   if (!response.ok) {
@@ -560,6 +502,12 @@ function wireNavigation() {
     });
   });
 
+  ui.wordmark?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showPage(ui.wordmark.dataset.navTarget);
+    closeMobileNav();
+  });
+
   window.addEventListener("resize", () => {
     if (window.innerWidth > 860) {
       closeMobileNav();
@@ -588,15 +536,6 @@ function wireEvents() {
   ui.rawInput.addEventListener("input", () => {
     ui.rawInput.classList.remove("has-error");
     updateCharCounts();
-  });
-
-  ui.styleSelect?.addEventListener("change", () => {
-    if (!ui.styleSelect.value) return;
-  });
-
-  [ui.apiKeyInput, ui.apiEndpointInput, ui.apiModelInput].forEach((input) => {
-    input?.addEventListener("input", saveApiConfig);
-    input?.addEventListener("change", saveApiConfig);
   });
 
   ui.templatePills.forEach((pill) => {
@@ -663,7 +602,6 @@ function wireEvents() {
 function initialize() {
   wireEvents();
   wireNavigation();
-  syncApiConfigInputs();
   updateCharCounts();
   renderSavedPrompts(loadSavedPrompts());
   const savedTheme = localStorage.getItem(THEME_KEY);

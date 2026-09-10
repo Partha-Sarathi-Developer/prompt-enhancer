@@ -1,79 +1,73 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const core = require('./lib/enhance-core');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname)));
+
+function sendError(res, error) {
+  return res.status(error.status).json({ error: error.message });
+}
 
 app.post('/api/enhance', async (req, res) => {
   try {
-    const { raw, options = {} } = req.body || {};
-    const apiKey = process.env.GROQ_API_KEY;
-    const endpoint = process.env.GROQ_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions';
-    const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-
-    if (!raw || typeof raw !== 'string' || !raw.trim()) {
-      return res.status(400).json({ error: 'Prompt text is required.' });
+    if (!core.isOriginAllowed(req.get('origin'), process.env)) {
+      return sendError(res, core.ERRORS.originBlocked);
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Server is missing GROQ_API_KEY. Keep the key in the .env file only.' });
+    const validated = core.validateRequest(req.body);
+    if (!validated.ok) {
+      return sendError(res, validated.error);
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.3,
-        messages: [
-          {
-            role: 'system',
-            content: [
-              'You are a prompt engineering assistant.',
-              'Rewrite the user raw request into a polished, well-structured prompt.',
-              'Preserve the intent and improve clarity.',
-              'Write the enhanced prompt as plain text with no Markdown symbols (no #, *, _, or backticks); label each section with a plain word followed by a colon.',
-              'Return only the final enhanced prompt text.',
-            ].join(' '),
-          },
-          {
-            role: 'user',
-            content: [
-              `Raw request: ${raw}`,
-              `Options: role=${Boolean(options.role)}, task=${Boolean(options.task)}, format=${Boolean(options.format)}, constraints=${Boolean(options.constraints)}, examples=${Boolean(options.examples)}, reasoning=${Boolean(options.reasoning)}`,
-            ].join('\n\n'),
-          },
-        ],
-      }),
+    const config = core.resolveConfig(process.env);
+    if (!config.apiKey) {
+      console.error('GROQ_API_KEY is not set; refusing to enhance.');
+      return sendError(res, core.ERRORS.misconfigured);
+    }
+
+    const result = await core.requestEnhancement({
+      raw: validated.raw,
+      options: validated.options,
+      config,
     });
 
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      const message = data?.error?.message || 'AI request failed';
-      return res.status(response.status).json({ error: message });
+    if (!result.ok) {
+      return sendError(res, result.error);
     }
 
-    const content = data?.choices?.[0]?.message?.content?.trim();
-    if (!content) {
-      return res.status(502).json({ error: 'AI returned an empty response.' });
-    }
-
-    return res.json({ output: content });
+    return res.json({ output: result.output });
   } catch (error) {
-    return res.status(500).json({ error: error.message || 'Unexpected server error' });
+    console.error('Unexpected error in /api/enhance:', error);
+    return sendError(res, core.ERRORS.unexpected);
   }
 });
 
+app.all('/api/enhance', (_req, res) => sendError(res, core.ERRORS.methodNotAllowed));
+
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+// Express's JSON parser rejects oversized or malformed bodies before the route runs,
+// so translate those into the same shapes the route would have returned.
+app.use((error, _req, res, next) => {
+  if (!error) return next();
+
+  if (error.type === 'entity.too.large') {
+    return sendError(res, core.ERRORS.bodyTooLarge);
+  }
+
+  if (error.type === 'entity.parse.failed') {
+    return sendError(res, core.ERRORS.invalidRequest);
+  }
+
+  console.error('Unhandled server error:', error);
+  return sendError(res, core.ERRORS.unexpected);
 });
 
 app.use((req, res, next) => {

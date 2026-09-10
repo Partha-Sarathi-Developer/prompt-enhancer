@@ -28,7 +28,6 @@
   --signal-green: #3ddc84;
   --signal-green-dim: #1e6b45;
   --signal-red: #ff5d5d;
-  --signal-red-dim: #7a2e2e;
   --cable-blue: #5eb1ff;
 
   --font-display: "Oswald", "Arial Narrow", sans-serif;
@@ -132,9 +131,9 @@ button {
   color: #1a1206;
 }
 
-/* The `hidden` attribute must always win over same-specificity display
-   rules (e.g. `.loading-gate { display: flex }`, `.app-shell { display: flex }`),
-   otherwise the browser's built-in [hidden] rule can lose the cascade tie. */
+/* The `hidden` attribute must always win over same-specificity display rules
+   (e.g. `.app-shell { display: flex }`), otherwise the browser's built-in
+   [hidden] rule can lose the cascade tie. */
 [hidden] {
   display: none !important;
 }
@@ -155,8 +154,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
-[tabindex]:focus-visible,
-.switch:focus-visible {
+[tabindex]:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
@@ -230,13 +228,6 @@ textarea:focus-visible,
 /* ==========================================================================
    Layout shells
    ========================================================================== */
-.auth-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem 1rem;
-}
-
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -359,30 +350,9 @@ body.light-theme .topbar {
   height: 1rem;
 }
 
-.icon-btn--ghost {
-  color: var(--text-dim);
-}
-
 .theme-toggle__icon {
   font-size: 0.95rem;
   line-height: 1;
-}
-
-.topbar__user {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
-.topbar__email {
-  font-family: var(--font-mono);
-  color: var(--text);
-  max-width: 32vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .main-wrap {
@@ -405,8 +375,7 @@ body.light-theme .topbar {
   margin-top: 1.25rem;
 }
 
-.info-panel__lead,
-.info-panel__empty {
+.info-panel__lead {
   color: var(--text-dim);
   margin-bottom: 0.9rem;
 }
@@ -537,185 +506,6 @@ body.light-theme .topbar {
   flex-direction: column;
 }
 
-.auth-card {
-  width: 100%;
-  max-width: 440px;
-  padding: 2rem 2rem 1.75rem;
-}
-
-.auth-card__header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  margin-bottom: 1.6rem;
-  text-align: center;
-}
-
-.auth-card__tagline {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-}
-
-/* -- Tabs ------------------------------------------------------------------ */
-.tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
-  background: var(--bg-alt);
-  border: 1px solid var(--panel-border-soft);
-  border-radius: var(--radius-md);
-  padding: 0.3rem;
-  margin-bottom: 1.5rem;
-}
-
-.tab-btn {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.6rem 0.5rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.tab-btn[aria-selected="true"] {
-  background: var(--panel-raised);
-  color: var(--brass-bright);
-  box-shadow: 0 0 0 1px var(--panel-border);
-}
-
-.tab-btn:hover:not([aria-selected="true"]) {
-  color: var(--text);
-}
-
-/* -- Forms ------------------------------------------------------------------ */
-.form {
-  display: none;
-  flex-direction: column;
-  gap: 1.05rem;
-}
-
-.form.is-active {
-  display: flex;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.field__label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.field__row {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.field__input {
-  width: 100%;
-  background: var(--bg-alt);
-  border: 1px solid var(--panel-border);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.92rem;
-  padding: 0.65rem 0.8rem;
-  border-radius: var(--radius-sm);
-  transition: border-color 0.15s ease;
-}
-
-.field__input:focus {
-  border-color: var(--cable-blue);
-}
-
-.field__input.has-error {
-  border-color: var(--signal-red);
-}
-
-.field__toggle-visibility {
-  position: absolute;
-  right: 0.5rem;
-  background: transparent;
-  border: none;
-  color: var(--text-faint);
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  padding: 0.3rem 0.4rem;
-  text-transform: uppercase;
-}
-
-.field__toggle-visibility:hover {
-  color: var(--brass);
-}
-
-.field__error {
-  min-height: 1.1em;
-  font-size: 0.78rem;
-  color: var(--signal-red);
-  font-family: var(--font-mono);
-}
-
-.field__hint {
-  font-size: 0.76rem;
-  color: var(--text-faint);
-}
-
-/* Password strength meter — reads like a channel gain meter */
-.strength {
-  display: flex;
-  gap: 4px;
-  margin-top: 0.15rem;
-}
-
-.strength__seg {
-  height: 5px;
-  flex: 1;
-  border-radius: 2px;
-  background: var(--panel-border);
-  transition: background-color 0.2s ease;
-}
-
-.strength[data-level="1"] .strength__seg:nth-child(1) {
-  background: var(--signal-red);
-}
-
-.strength[data-level="2"] .strength__seg:nth-child(-n + 2) {
-  background: var(--signal-red);
-}
-
-.strength[data-level="3"] .strength__seg:nth-child(-n + 3) {
-  background: var(--brass);
-}
-
-.strength[data-level="4"] .strength__seg {
-  background: var(--signal-green);
-}
-
-.strength__label {
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  margin-top: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 /* -- Buttons ----------------------------------------------------------------- */
 .btn {
   appearance: none;
@@ -764,21 +554,6 @@ body.light-theme .topbar {
   color: var(--brass-bright);
 }
 
-.btn-google {
-  background: var(--bg-alt);
-  color: var(--text);
-  border: 1px solid var(--panel-border);
-  width: 100%;
-}
-
-.btn-google:hover {
-  border-color: var(--cable-blue);
-}
-
-.btn-block {
-  width: 100%;
-}
-
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--panel-border);
@@ -788,83 +563,6 @@ body.light-theme .topbar {
 .btn-ghost:hover {
   color: var(--text);
   border-color: var(--text-faint);
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--cable-blue);
-  font-family: var(--font-body);
-  text-transform: none;
-  letter-spacing: normal;
-  font-weight: 500;
-  font-size: 0.82rem;
-  padding: 0.2rem 0;
-  cursor: pointer;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-faint);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 0.35rem 0;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--panel-border);
-}
-
-.auth-card__footer {
-  margin-top: 1.4rem;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
-.form-banner {
-  border-radius: var(--radius-sm);
-  padding: 0.65rem 0.8rem;
-  font-size: 0.83rem;
-  font-family: var(--font-mono);
-  display: none;
-}
-
-.form-banner.is-visible {
-  display: block;
-}
-
-.form-banner--error {
-  background: rgba(255, 93, 93, 0.1);
-  border: 1px solid var(--signal-red-dim);
-  color: #ffb0b0;
-}
-
-.form-banner--success {
-  background: rgba(61, 220, 132, 0.1);
-  border: 1px solid var(--signal-green-dim);
-  color: #a9f2cb;
-}
-
-/* -- Forgot password panel (inline reveal) ----------------------------------- */
-.reset-panel {
-  display: none;
-  flex-direction: column;
-  gap: 0.9rem;
-  border-top: 1px dashed var(--panel-border);
-  padding-top: 1.1rem;
-  margin-top: 0.2rem;
-}
-
-.reset-panel.is-visible {
-  display: flex;
 }
 
 /* ==========================================================================
@@ -1260,54 +958,6 @@ body.light-theme .topbar {
 }
 
 
-.switch {
-  --w: 52px;
-  --h: 28px;
-  width: var(--w);
-  height: var(--h);
-  border-radius: 999px;
-  background: var(--bg-alt);
-  border: 1px solid var(--panel-border);
-  position: relative;
-  cursor: pointer;
-  padding: 0;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.switch__thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: calc(var(--h) - 6px);
-  height: calc(var(--h) - 6px);
-  border-radius: 50%;
-  background: var(--text-faint);
-  transition: transform 0.18s ease, background-color 0.18s ease;
-}
-
-.switch[aria-pressed="true"] {
-  background: rgba(61, 220, 132, 0.14);
-  border-color: var(--signal-green-dim);
-}
-
-.switch[aria-pressed="true"] .switch__thumb {
-  transform: translateX(calc(var(--w) - var(--h)));
-  background: var(--signal-green);
-  box-shadow: 0 0 8px rgba(61, 220, 132, 0.6);
-}
-
-.channel__led {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  color: var(--text-faint);
-  text-transform: uppercase;
-}
-
-.switch[aria-pressed="true"] ~ .channel__led {
-  color: var(--signal-green);
-}
-
 /* -- Utility strip / prompt presets ---------------------------------------- */
 .utility-strip {
   display: grid;
@@ -1322,10 +972,6 @@ body.light-theme .topbar {
   gap: 0.45rem;
 }
 
-.field-group--stretch {
-  min-width: 0;
-}
-
 .field-label {
   font-size: 0.72rem;
   color: var(--text-faint);
@@ -1334,8 +980,7 @@ body.light-theme .topbar {
   text-transform: uppercase;
 }
 
-.field-select,
-.field-input {
+.field-select {
   width: 100%;
   border: 1px solid var(--panel-border);
   background: var(--bg-alt);
@@ -1345,40 +990,6 @@ body.light-theme .topbar {
   font-family: var(--font-body);
 }
 
-.field-input::placeholder {
-  color: var(--text-faint);
-}
-
-.info-note {
-  margin: 0.75rem 0 0;
-  color: var(--text-faint);
-  font-size: 0.74rem;
-  line-height: 1.5;
-  font-family: var(--font-mono);
-}
-
-.template-pills {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.pill-btn {
-  appearance: none;
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text-dim);
-  border-radius: 999px;
-  padding: 0.38rem 0.72rem;
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  cursor: pointer;
-}
-
-.pill-btn:hover {
-  color: var(--text);
-  border-color: var(--brass);
-}
 
 /* -- Saved prompts -------------------------------------------------------- */
 .saved-panel {
@@ -1467,13 +1078,6 @@ body.light-theme .topbar {
   padding: 0.9rem;
 }
 
-.section-title {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  letter-spacing: 0.08em;
-  margin-bottom: 0.75rem;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -1484,15 +1088,4 @@ body.light-theme .topbar {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.loading-gate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  gap: 0.75rem;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
 }

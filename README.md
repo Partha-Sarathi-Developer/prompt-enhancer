@@ -21,16 +21,15 @@ Prompt Enhancer is a web application designed with a mixing-console / signal-cha
 - 📝 **Plain-Text Output**: Enhanced prompts are emitted as plain text with no Markdown symbols (`#`, `*`, `_`, backticks), so they paste cleanly into any destination — including tools that do not render Markdown.
 - 🎨 **Signal-Chain Studio Aesthetic**: Tactile studio mixing-gear UI with animated VU meters, brass highlights, signal LEDs, dark/light theme switching, and responsive design.
 - 📚 **Template Library**: Quick-apply presets for Code, Writing, Marketing, Business, Technical Docs, Social Media, and Image FX (Midjourney).
+- 🎚️ **Prompt Style Control**: Choose Concise, Balanced, or Detailed to set how much the enhancer expands each section.
 - 💾 **Local Saved Prompts**: Save, load, and manage your favorite prompt history in browser storage.
-- 🔐 **Firebase Authentication**: Email/password and Google Sign-in integration with route protection.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: HTML5, Vanilla CSS3 (Custom Properties, Flexbox & CSS Grid, Animations), Vanilla JavaScript (ES Modules).
-- **Backend**: Node.js + Express proxy (`server.js`) that keeps the AI API key server-side, with a Netlify Function (`netlify/functions/enhance.js`) serving the same `/api/enhance` route in production.
-- **Auth**: Firebase Authentication (Email/Password & Google OAuth).
+- **Backend**: Node.js + Express proxy (`server.js`) that keeps the AI API key server-side, with a Netlify Function (`netlify/functions/enhance.mjs`) serving the same `/api/enhance` route in production. Both share their validation and request building via `lib/enhance-core.js`.
 - **AI Integration**: OpenAI-compatible REST API (Groq) with a client-side fallback engine that shapes the prompt locally whenever the API is unreachable.
 - **Styling**: Google Fonts (`Oswald`, `Work Sans`, `JetBrains Mono`).
 
@@ -40,19 +39,18 @@ Prompt Enhancer is a web application designed with a mixing-console / signal-cha
 
 ```text
 prompt-enhancer/
-├── index.html              # Main studio application & authentication landing page
-├── app.html                # Standalone app view
+├── index.html              # The entire studio application
 ├── server.js               # Express server + /api/enhance proxy (local development)
-├── netlify.toml            # Netlify build config & /api/enhance redirect
+├── netlify.toml            # Netlify build config
 ├── netlify/
 │   └── functions/
-│       └── enhance.js      # Serverless equivalent of the /api/enhance proxy
+│       └── enhance.mjs     # Serverless /api/enhance proxy (declares its own route)
+├── lib/
+│   └── enhance-core.js     # Validation, limits, and Groq request building (shared)
 ├── css/
 │   └── style.css           # Core design system & Signal Chain studio styling
 ├── js/
-│   ├── auth.js             # Authentication logic (Firebase auth & validation)
-│   ├── enhancer.js         # Core enhancer engine, AI launcher, and page routing
-│   └── firebase-config.js  # Firebase project configuration
+│   └── enhancer.js         # Core enhancer engine, AI launcher, and page routing
 ├── .env.example            # Template for the required server-side variables
 └── README.md               # Project documentation
 ```
@@ -86,23 +84,18 @@ Because the project uses native ES Modules (`type="module"`), it must be served 
 
 ---
 
-### 2. Firebase Configuration (Optional)
+### 2. Request Limits
 
-To enable live Firebase Email & Google Authentication:
-1. Create a project in the [Firebase Console](https://console.firebase.google.com/).
-2. Enable **Email/Password** and **Google** under **Authentication → Sign-in method**.
-3. Update `js/firebase-config.js` with your project's configuration object:
+`/api/enhance` spends real API credits, so both implementations enforce the same limits from `lib/enhance-core.js`:
 
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
+| Limit | Value | Enforced by |
+| --- | --- | --- |
+| Prompt length | 4,000 characters | `lib/enhance-core.js` (and `maxlength` on the textarea) |
+| Request body | 16 KB | Express `json` limit / `Content-Length` check |
+| Response length | 1,200 output tokens | `max_tokens` on the Groq request |
+| Request rate | 10 per 60s per IP | Netlify platform rate limiting (deployed only) |
+
+Requests carrying an unexpected `model` field are ignored rather than honoured, so a caller cannot select a more expensive model. Rate limiting is enforced by Netlify and therefore does **not** apply to the local Express server.
 
 ---
 
@@ -133,11 +126,13 @@ Prompts longer than roughly 1,800 characters of URL are not sent as a query stri
 
 ## ☁️ Deployment (Netlify)
 
-`netlify.toml` publishes the repository root and redirects `/api/enhance` to the bundled function, so the frontend needs no changes between local and deployed environments.
+`netlify.toml` publishes the repository root. The function claims `/api/enhance` through its own `config.path` rather than a redirect, because Netlify's `rateLimit` rule only applies to a path the function declares itself.
 
 1. Connect the repository to a Netlify site.
 2. Under **Site configuration → Environment variables**, add `GROQ_API_KEY` (plus `GROQ_ENDPOINT` / `GROQ_MODEL` to override the defaults).
-3. Deploy. `netlify/functions/enhance.js` serves the same contract as the local Express route.
+3. Deploy. `netlify/functions/enhance.mjs` serves the same contract as the local Express route.
+
+By default only the deployed site's own origin and `localhost` may call the endpoint; set `ALLOWED_ORIGINS` (comma-separated) to permit others.
 
 Never commit `.env` or expose the key to the client — both proxies exist specifically to keep it server-side.
 
@@ -152,4 +147,4 @@ Never commit `.env` or expose the key to the client — both proxies exist speci
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Published under the ISC license declared in `package.json`.

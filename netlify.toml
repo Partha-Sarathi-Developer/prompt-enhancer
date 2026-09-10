@@ -2,7 +2,8 @@
   publish = "."
   functions = "netlify/functions"
 
-[[redirects]]
-  from = "/api/enhance"
-  to = "/.netlify/functions/enhance"
-  status = 200
+# /api/enhance is declared by the function's own `config.path` so that its
+# `rateLimit` rule applies; a redirect here would bypass that.
+
+[functions]
+  node_bundler = "esbuild"
