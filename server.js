@@ -39,6 +39,9 @@ app.post('/api/enhance', async (req, res) => {
               'You are a prompt engineering assistant.',
               'Rewrite the user raw request into a polished, well-structured prompt.',
               'Preserve the intent and improve clarity.',
+              options.outputFormat === 'plain'
+                ? 'Write the enhanced prompt as plain text with no Markdown symbols (no #, *, _, or backticks); label each section with a plain word followed by a colon.'
+                : 'Write the enhanced prompt using Markdown headings and bullet lists.',
               'Return only the final enhanced prompt text.',
             ].join(' '),
           },

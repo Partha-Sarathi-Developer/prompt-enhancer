@@ -35,6 +35,7 @@ const ui = {
   savedList: document.getElementById("savedList"),
   savedCount: document.getElementById("savedCount"),
   styleSelect: document.getElementById("styleSelect"),
+  formatSelect: document.getElementById("formatSelect"),
   apiKeyInput: document.getElementById("apiKeyInput"),
   apiEndpointInput: document.getElementById("apiEndpointInput"),
   apiModelInput: document.getElementById("apiModelInput"),
@@ -108,37 +109,53 @@ function detectRole(rawLower) {
 function buildEnhancedPrompt(raw, options) {
   const trimmed = raw.trim().replace(/\s+/g, " ");
   const rawLower = trimmed.toLowerCase();
+  const isPlain = options.outputFormat === "plain";
+  const heading = (title) => (isPlain ? `${title}:` : `## ${title}`);
   const sections = [];
 
   if (options.role) {
-    sections.push(`## Role\nYou are ${detectRole(rawLower)}.`);
+    sections.push(`${heading("Role")}\nYou are ${detectRole(rawLower)}.`);
   }
 
   if (options.task) {
-    sections.push(`## Objective\nProduce a response that directly fulfills this request: ${trimmed}.\n\nStay on the stated goal, keep the scope tight, and avoid unnecessary expansion.`);
+    sections.push(`${heading("Objective")}\nProduce a response that directly fulfills this request: ${trimmed}.\n\nStay on the stated goal, keep the scope tight, and avoid unnecessary expansion.`);
   } else {
-    sections.push(`## Request\n${trimmed}`);
+    sections.push(`${heading("Request")}\n${trimmed}`);
   }
 
-  sections.push("## Context\nTreat the request as the main source of truth. When a detail is missing, only make a sensible assumption if it is safe to do so; otherwise ask a focused clarification question.");
+  sections.push(`${heading("Context")}\nTreat the request as the main source of truth. When a detail is missing, only make a sensible assumption if it is safe to do so; otherwise ask a focused clarification question.`);
 
   if (options.format) {
-    sections.push("## Output Format\n- Use clear Markdown structure.\n- Start with the most useful result first.\n- Use headings, numbered steps, bullet points, or tables where readability improves.\n- Avoid filler, repetition, and unnecessary preamble.");
+    const formatRules = isPlain
+      ? [
+          "- Use plain text only: no Markdown symbols such as #, *, _, or backticks.",
+          "- Start with the most useful result first.",
+          "- Label each section with a plain word followed by a colon, separated by blank lines.",
+          "- Use numbered steps or dashes for lists.",
+          "- Avoid filler, repetition, and unnecessary preamble.",
+        ]
+      : [
+          "- Use clear Markdown structure.",
+          "- Start with the most useful result first.",
+          "- Use headings, numbered steps, bullet points, or tables where readability improves.",
+          "- Avoid filler, repetition, and unnecessary preamble.",
+        ];
+    sections.push(`${heading("Output Format")}\n${formatRules.join("\n")}`);
   }
 
   if (options.constraints) {
-    sections.push("## Constraints\n- Be accurate and do not invent sources, facts, or behavior.\n- Stay within the request scope.\n- Preserve the user’s intent and tone unless a different style is explicitly requested.\n- If the task is ambiguous, ask for clarification before proceeding.");
+    sections.push(`${heading("Constraints")}\n- Be accurate and do not invent sources, facts, or behavior.\n- Stay within the request scope.\n- Preserve the user’s intent and tone unless a different style is explicitly requested.\n- If the task is ambiguous, ask for clarification before proceeding.`);
   }
 
   if (options.examples) {
-    sections.push("## Examples\nInclude 1-2 concrete examples only when they materially clarify the expected structure or style.");
+    sections.push(`${heading("Examples")}\nInclude 1-2 concrete examples only when they materially clarify the expected structure or style.`);
   }
 
   if (options.reasoning) {
-    sections.push("## Reasoning\nThink step-by-step internally, then present only the reasoning that adds practical value to the final answer.");
+    sections.push(`${heading("Reasoning")}\nThink step-by-step internally, then present only the reasoning that adds practical value to the final answer.`);
   }
 
-  sections.push("## Success Criteria\nThe final answer should be specific, polished, actionable, and easy to follow without extra noise.");
+  sections.push(`${heading("Success Criteria")}\nThe final answer should be specific, polished, actionable, and easy to follow without extra noise.`);
   return sections.join("\n\n");
 }
 
@@ -242,6 +259,7 @@ function resolveOptions() {
   return {
     ...DEFAULT_OPTIONS,
     style: ui.styleSelect?.value ?? "balanced",
+    outputFormat: ui.formatSelect?.value ?? "markdown",
   };
 }
 
